@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - CIVIC EYE</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>Create Your CIVIC EYE Account</header>
+
+  <div class="dashboard-section" style="max-width: 400px;">
+    <h2>Sign Up</h2>
+    <div class="input-group">
+      <label for="signupName">Full Name</label>
+      <input type="text" id="signupName" placeholder="Enter your full name" required>
+    </div>
+    <div class="input-group">
+      <label for="signupEmail">Email</label>
+      <input type="email" id="signupEmail" placeholder="Enter your email" required>
+    </div>
+    <div class="input-group">
+      <label for="signupPassword">Password</label>
+      <input type="password" id="signupPassword" placeholder="Create a password (min. 6 characters)" required>
+    </div>
+    <div class="input-group">
+      <label for="signupRole">I am a:</label>
+      <select id="signupRole">
+        <option value="Citizen">Citizen</option>
+      </select>
+    </div>
+    <button onclick="handleSignup()">Sign Up</button>
+    <p style="text-align:center; margin-top: 15px;">Already have an account? <a href="index.html">Login here</a></p>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    window.handleSignup = async function() {
+      const name = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
+      const role = document.getElementById("signupRole").value;
+
+      if (!name || !email || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+      }
+
+      try {
+        // 1. Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2. Save user's role and name in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: name,
+          email: email,
+          role: role
+        });
+
+        alert("Account created successfully! Please log in.");
+        window.location.href = "index.html"; // Redirect to login page
+
+      } catch (error) {
+        console.error("Signup Error: ", error);
+        alert("Error creating account: " + error.message);
+      }
+    };
+  </script>
+</body>
+</html>
